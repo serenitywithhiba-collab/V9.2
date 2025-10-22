@@ -1,5 +1,623 @@
 <!doctype html>
-<html><head><meta charset='utf-8'><title>Laboratoire Hibalogique Inc. — HAI v9.2</title></head><body>
-<h1>HAI v9.2 build ready</h1>
-<p>This placeholder represents the final combined working version including all admin/participant, charts, exports, and consent features. Deploy directly to Vercel or GitHub Pages.</p>
-</body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Laboratoire Hibalogique Inc. — HAI v9.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<!-- libs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+:root{--primary:#b91c1c;--accent:#ef4444;--muted:#64748b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:#fff;color:#0a0f1a}
+.header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#fff;border-bottom:3px solid var(--primary)}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.brand h1{margin:0;font-size:18px}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid #e5e7eb;background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600}
+.tab.active{background:var(--primary);color:#fff}
+.container{max-width:1180px;margin:16px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(2,6,23,.05);margin:14px 0}
+.btn{background:var(--primary);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn.ghost{background:#fff;color:var(--primary);border:1px solid rgba(185,28,28,.35)}
+.small{font-size:13px;color:#64748b}
+.input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e5e7eb}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th,.table td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}
+.layout{display:grid;grid-template-columns:1fr 320px;gap:16px}
+.preview{position:relative;width:100%;height:360px;border-radius:10px;background:#f8fafc;display:flex;align-items:center;justify-content:center;color:#94a3b8;overflow:hidden;border:1px solid #e5e7eb}
+.preview video,.preview img{width:100%;height:100%;object-fit:cover}
+.circle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(46vmin,52%);height:min(46vmin,52%);aspect-ratio:1/1;border-radius:50%;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.62), 0 0 0 2px #fff inset;background:transparent}
+.midline{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:2px;height:56%;background:#ffffffcc;border-radius:2px}
+.timeline{display:flex;gap:8px;flex-wrap:wrap}
+.tp{padding:8px 10px;border-radius:8px;background:#fff7f7;border:1px dashed rgba(185,28,28,.35);cursor:pointer}
+.tp.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;border:none}
+.thumbRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.thumb{width:88px;height:88px;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;position:relative}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .x{position:absolute;right:4px;top:4px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px;cursor:pointer}
+.thumb .dl{position:absolute;left:4px;top:4px;background:#0ea5e9;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px;cursor:pointer}
+.metricGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.metric{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px;font-weight:600}
+.metric .val{font-weight:800}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.badge{border-radius:999px;padding:2px 8px;font-size:11px;border:1px solid #e5e7eb;background:#fff}
+.badge.min{background:#e9f9ee;border-color:#a7f3d0}
+.badge.mild{background:#fff9db;border-color:#fde68a}
+.badge.mod{background:#ffedd5;border-color:#fdba74}
+.badge.sev{background:#fee2e2;border-color:#fecaca}
+.sidebar .card{margin:0 0 12px 0}
+.attach{border:1px dashed #e5e7eb;border-radius:10px;padding:10px}
+.star{font-size:20px;cursor:pointer;color:#e5e7eb}.star.active{color:#f59e0b}
+.hero{position:relative;height:220px;border-radius:12px;overflow:hidden;border:1px solid #f1f5f9;margin-top:6px}
+.hero img{width:100%;height:100%;object-fit:cover;filter:saturate(1.05) contrast(1.02)}
+.hero .overlay{position:absolute;left:0;top:0;right:0;bottom:0;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,255,255,.2))}
+.heroText{position:absolute;left:20px;top:20px}
+.footer{max-width:1180px;margin:12px auto 28px;padding:0 16px;color:#475569;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.codeWrap{display:none;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="brand">
+    <div class="logo">H</div>
+    <div><h1>Laboratoire Hibalogique Inc. — H™ | GCP-Aligned</h1></div>
+  </div>
+  <div class="nav">
+    <button class="tab active" data-tab="session">Participant Session</button>
+    <button class="tab" data-tab="study">Study Setup</button>
+    <button class="tab" data-tab="participants">Participants</button>
+    <span class="codeWrap" id="codeWrap"><input id="adminCode" class="input" style="width:120px" placeholder="Admin code"><button class="btn ghost" onclick="checkCode()">Unlock</button></span>
+  </div>
+</header>
+
+<div class="container">
+  <section class="card hero">
+    <img id="heroImg" alt="">
+    <div class="overlay"></div>
+    <div class="heroText">
+      <h2 style="margin:0 0 6px 0">Clinical Cosmetic Platform</h2>
+      <div class="small">eConsent • Guided photography • Timepoint tracking • Excel analytics</div>
+    </div>
+  </section>
+
+  <!-- STUDY (Admin) -->
+  <section class="card" id="tab-study" style="display:none">
+    <h2 style="margin:0">Study Setup (Admin)</h2>
+    <div style="display:flex;gap:8px;align-items:center;margin:8px 0">
+      <button class="btn ghost" onclick="loadTemplate()">Load Template</button>
+      <button class="btn ghost" onclick="saveTemplate()">Save Template</button>
+      <span class="small">Admin code: <b>001</b></span>
+    </div>
+    <div class="grid-3">
+      <input id="s_title" class="input" placeholder="Study Title / Code">
+      <input id="s_client" class="input" placeholder="Client Name">
+      <input id="s_internal" class="input" placeholder="Internal Code / Study #">
+      <input id="s_product_type" class="input" placeholder="Product Type (e.g., moisturizer, serum)">
+      <input id="s_product_name" class="input" placeholder="Product Name">
+      <input id="s_batch" class="input" placeholder="Batch Number">
+      <input id="s_area" class="input" placeholder="Application Area (e.g., face)">
+      <input id="s_comp" class="input" placeholder="Compensation (e.g., $50 + product)">
+      <input id="s_timepoints" class="input" placeholder="Timepoints (comma-separated)">
+    </div>
+    <div class="grid-2" style="margin-top:8px">
+      <div>
+        <div class="small" style="margin-bottom:4px"><b>Resources & Questionnaires</b> (paste links)</div>
+        <div class="grid-2">
+          <input id="resTitle" class="input" placeholder="Title (e.g., Baseline questionnaire)">
+          <input id="resURL" class="input" placeholder="URL (Drive/Forms/etc.)">
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn ghost" onclick="addResource()">Add Resource</button>
+          <button class="btn" onclick="saveStudy()">Save Study</button>
+        </div>
+        <div id="resList" class="small" style="margin-top:6px"></div>
+      </div>
+      <div>
+        <div class="small" style="margin-bottom:4px"><b>Attachments</b> (admin-only; local)</div>
+        <div class="attach">
+          <input id="adminFiles" type="file" multiple onchange="handleAdminFiles(event)">
+          <div id="fileList" class="small" style="margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTICIPANTS (Admin) -->
+  <section class="card" id="tab-participants" style="display:none">
+    <h2 style="margin:0">Participants (Admin)</h2>
+    <table class="table">
+      <thead><tr>
+        <th><input type="checkbox" id="selAll" onchange="toggleAll(this)"></th>
+        <th>Name</th><th>Email</th><th>Timepoints</th><th>Satisfaction</th><th>Daily Use</th><th>Comments</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="participantsTable"></tbody>
+    </table>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="exportSelected()">Export Selected (Excel + charts)</button>
+      <button class="btn ghost" onclick="analyzeSelected()">Analyze Selected (in-app)</button>
+      <button class="btn ghost" onclick="clearAll()">Clear All (local)</button>
+    </div>
+  </section>
+
+  <!-- PARTICIPANT SESSION (no code) -->
+  <section class="card" id="tab-session">
+    <div class="layout">
+      <main>
+        <h2 style="margin:0">Participant Session</h2>
+        <div class="small">Enter your email to start or continue.</div>
+        <div class="grid-2" style="margin-top:8px">
+          <input id="email" class="input" placeholder="you@example.com">
+          <button class="btn" onclick="startSession()">Continue</button>
+        </div>
+        <div id="loginMsg" class="small" style="margin-top:6px"></div>
+
+        <!-- ICF -->
+        <div class="card" id="consentCard" style="display:none;margin-top:12px">
+          <h3 style="margin:0">Informed Consent — Canada</h3>
+          <div id="icfText" class="small"></div>
+
+          <h4 style="margin:10px 0 6px 0">Participant Information</h4>
+          <div class="grid-2">
+            <input id="p_name" class="input" placeholder="Full name">
+            <input id="p_age" class="input" type="number" min="16" max="100" placeholder="Age">
+            <input id="p_gender" class="input" placeholder="Gender / Sex">
+            <input id="p_photo" class="input" placeholder="Fitzpatrick (I–VI)">
+            <input id="p_skin" class="input" placeholder="Skin type">
+            <select id="p_preg" class="input"><option value="">Pregnant or lactating?</option><option>No</option><option>Yes</option><option>N/A</option></select>
+            <input id="p_allergy" class="input" placeholder="Allergies">
+            <input id="p_meds" class="input" placeholder="Current medications / topicals">
+          </div>
+
+          <h4 style="margin:10px 0 6px 0">Electronic Signature</h4>
+          <div class="grid-2">
+            <input id="sig_name" class="input" placeholder="Typed name">
+            <input id="sig_date" class="input" type="date">
+          </div>
+          <canvas id="sigCanvas" width="720" height="140" style="border:1px dashed #e5e7eb;border-radius:10px;margin-top:8px"></canvas>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <input id="attest" type="checkbox">
+            <label for="attest" class="small">I have read and understood this information and I voluntarily agree to participate, including standardized photography. Compensation: <span id="compText">—</span>.</label>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" onclick="acceptConsent()">Accept & Continue</button>
+            <button class="btn ghost" onclick="downloadConsentPDF()">Download Consent PDF</button>
+            <button class="btn ghost" onclick="downloadConsentWord()">Download ICF (Word)</button>
+          </div>
+          <div id="consentMsg" class="small" style="margin-top:6px"></div>
+        </div>
+
+        <!-- CAPTURE -->
+        <div class="card" id="captureCard" style="display:none;margin-top:12px">
+          <h3 style="margin:0">Capture & Upload</h3>
+          <div class="legend">
+            <span class="badge min">0–20 Minimal</span>
+            <span class="badge mild">21–40 Mild</span>
+            <span class="badge mod">41–60 Moderate</span>
+            <span class="badge sev">61–100 Marked/Severe</span>
+          </div>
+          <div class="preview" id="previewWrap">
+            <div id="previewBox">No image selected</div>
+            <div class="circle"></div><div class="midline"></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn" onclick="startCamera()">Start Camera</button>
+            <button class="btn" onclick="capturePhoto()">Capture</button>
+            <button class="btn" onclick="savePhoto()" id="savePhotoBtn" style="background:#0b6ed9;display:none">Save Photo</button>
+            <button class="btn ghost" onclick="stopCamera()">Stop</button>
+            <input type="file" accept="image/*" id="fileInput" onchange="handleFile(event)">
+            <button class="btn ghost" onclick="downloadAllImages()">Download All Images (ZIP)</button>
+          </div>
+          <div style="margin-top:10px">
+            <label class="small">Timepoints:</label>
+            <div id="timepointList" class="timeline"></div>
+            <div class="thumbRow" id="tpThumbs"></div>
+          </div>
+
+          <div class="grid-2" style="margin-top:10px">
+            <div>
+              <label class="small">Comedones (count)</label>
+              <input id="eval_comedones" class="input" type="number" min="0" placeholder="e.g., 12">
+            </div>
+            <div>
+              <label class="small">Notes for this timepoint</label>
+              <input id="tpNotes" class="input" placeholder="e.g., mild tightness on day 3">
+            </div>
+          </div>
+
+          <div class="metricGrid" id="metricGrid"></div>
+          <div style="margin-top:8px"><button class="btn" onclick="saveTimepoint()">Save Timepoint</button></div>
+        </div>
+
+        <!-- END -->
+        <div class="card" id="endCard" style="display:none;margin-top:12px">
+          <h3 style="margin:0">End of Timepoint — Overall Satisfaction</h3>
+          <div>How satisfied are you with the product?</div>
+          <div id="stars" style="margin-top:6px">
+            <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span>
+          </div>
+          <div style="margin-top:8px"><label><input type="checkbox" id="dailyUse"> I used the product every day as instructed.</label></div>
+          <textarea id="finalComments" class="input" rows="4" placeholder="Comments"></textarea>
+          <div style="margin-top:8px"><button class="btn" onclick="saveEndFeedback()">Submit Feedback</button> <span id="endMsg" class="small"></span></div>
+        </div>
+      </main>
+
+      <aside class="sidebar">
+        <div class="card">
+          <b>Skincare Tips</b>
+          <div class="small" style="margin-top:6px">
+            • Even lighting, steady posture, keep face fully inside the circle.<br>
+            • Cleanse 15 min before photos; avoid makeup.<br>
+            • Keep camera at eye level; align nose on the midline.<br>
+            • Consistent background improves tracking.
+          </div>
+        </div>
+
+        <div class="card">
+          <b>AI Helper</b>
+          <div id="aiOut" class="small" style="margin-top:6px">Ask about routine, dryness, redness triggers, or pores.</div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <input id="aiIn" class="input" placeholder="e.g., Tips for redness?">
+            <button class="btn ghost" onclick="aiReply()">Ask</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <b>Attachments (Participant-visible)</b>
+          <div class="small">Admin-added resources appear here after Study save.</div>
+          <div id="sideLinks" class="small" style="margin-top:6px"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<footer class="footer">
+  <span>© Laboratoire Hibalogique Inc. — Montréal, QC, Canada • <a href="mailto:info@labhibalogique.com">info@labhibalogique.com</a></span>
+  <span>HAI</span>
+</footer>
+
+<script>
+/* storage keys */
+const SKEY_STUDY='hai_study';
+const SKEY_PART='hai_participants';
+const SKEY_TEMPLATE='hai_template';
+
+const HERO=[
+ "https://images.unsplash.com/photo-1618220179428-22790b0275bf?q=80&w=1600&auto=format&fit=crop",
+ "https://images.unsplash.com/photo-1603655854603-cb07f5b2b6c0?q=80&w=1600&auto=format&fit=crop",
+ "https://images.unsplash.com/photo-1596461404969-9ae70a2a3bd5?q=80&w=1600&auto=format&fit=crop",
+ "https://images.unsplash.com/photo-1556228724-4fb2d0a9b0e5?q=80&w=1600&auto=format&fit=crop"
+];
+(function(){ const img=document.getElementById('heroImg'); img.src=HERO[Math.floor(Math.random()*HERO.length)]; })();
+
+/* tabs + admin code */
+let ADMIN=false;
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+function switchTab(t){
+  if((t==='study'||t==='participants') && !ADMIN){ document.getElementById('codeWrap').style.display='inline-flex'; alert('Enter admin code 001 to unlock.'); return; }
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.tab[data-tab="'+t+'"]').classList.add('active');
+  ['study','participants','session'].forEach(id=>document.getElementById('tab-'+id).style.display=(id===t?'block':'none'));
+  if(t==='participants') listParticipants();
+  if(t==='session') { renderStudyForSession(); }
+}
+function checkCode(){
+  const code=(document.getElementById('adminCode').value||'').trim();
+  if(code==='001'){ ADMIN=true; document.getElementById('codeWrap').style.display='none'; switchTab('study'); }
+  else alert('Invalid code.');
+}
+
+/* helpers */
+const v = id => (document.getElementById(id).value||'');
+const setv = (id,val)=> document.getElementById(id).value=(val||'');
+
+/* template */
+function saveTemplate(){
+  const t={title:v('s_title'),client:v('s_client'),internal:v('s_internal'),product_type:v('s_product_type'),
+  product_name:v('s_product_name'),batch:v('s_batch'),area:v('s_area'),comp:v('s_comp'),timepoints:v('s_timepoints')};
+  localStorage.setItem(SKEY_TEMPLATE, JSON.stringify(t));
+  alert('Template saved.');
+}
+function loadTemplate(){
+  const t=JSON.parse(localStorage.getItem(SKEY_TEMPLATE)||'null'); if(!t){alert('No template yet.');return;}
+  setv('s_title',t.title);setv('s_client',t.client);setv('s_internal',t.internal);setv('s_product_type',t.product_type);
+  setv('s_product_name',t.product_name);setv('s_batch',t.batch);setv('s_area',t.area);setv('s_comp',t.comp);setv('s_timepoints',t.timepoints);
+  alert('Template loaded.');
+}
+
+/* study save/resources/files */
+function saveStudy(){
+  const prev=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}');
+  const s={
+    title:v('s_title'), client:v('s_client'), internal:v('s_internal'),
+    product_type:v('s_product_type'), product_name:v('s_product_name'), batch:v('s_batch'),
+    area:v('s_area'), comp:v('s_comp'),
+    timepoints: v('s_timepoints').split(',').map(x=>x.trim()).filter(Boolean),
+    resources: prev.resources||[], files: prev.files||[]
+  };
+  localStorage.setItem(SKEY_STUDY, JSON.stringify(s));
+  renderRes(); renderSideLinks();
+  alert('Study saved.');
+}
+function addResource(){
+  const title=v('resTitle'), url=v('resURL'); if(!title||!url){alert('Enter title and URL');return;}
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}'); s.resources=s.resources||[]; s.resources.push({title,url});
+  localStorage.setItem(SKEY_STUDY, JSON.stringify(s)); document.getElementById('resTitle').value=''; document.getElementById('resURL').value='';
+  renderRes(); renderSideLinks();
+}
+function renderRes(){
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}'); const box=document.getElementById('resList'); box.innerHTML='';
+  (s.resources||[]).forEach((r,i)=>{ const d=document.createElement('div'); d.innerHTML='<a target="_blank" href="'+r.url+'">'+r.title+'</a> <button class="btn ghost" style="padding:2px 6px;font-size:11px" onclick="delRes('+i+')">✕</button>'; box.appendChild(d); });
+}
+function delRes(i){
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}'); (s.resources||[]).splice(i,1); localStorage.setItem(SKEY_STUDY, JSON.stringify(s)); renderRes(); renderSideLinks();
+}
+function handleAdminFiles(ev){
+  const files=[...(ev.target.files||[])]; const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}'); s.files=s.files||[];
+  files.forEach(f=>{ const reader=new FileReader(); reader.onload=e=>{ s.files.push({name:f.name,data:e.target.result}); localStorage.setItem(SKEY_STUDY, JSON.stringify(s)); renderFiles(); }; reader.readAsDataURL(f); });
+}
+function renderFiles(){
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}'); const list=document.getElementById('fileList'); list.innerHTML='';
+  (s.files||[]).forEach(f=>{ const a=document.createElement('a'); a.href=f.data; a.download=f.name; a.textContent=f.name; const row=document.createElement('div'); row.appendChild(a); list.appendChild(row); });
+}
+function renderSideLinks(){
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}'); const box=document.getElementById('sideLinks'); box.innerHTML='';
+  (s.resources||[]).forEach(r=>{ const a=document.createElement('a'); a.href=r.url; a.target="_blank"; a.textContent='• '+r.title; box.appendChild(a); box.appendChild(document.createElement('br')); });
+}
+
+/* participants (admin) */
+function listParticipants(){
+  const parts=JSON.parse(localStorage.getItem(SKEY_PART)||'[]');
+  const tbody=document.getElementById('participantsTable');
+  if(!parts.length){ tbody.innerHTML='<tr><td colspan="8">No participants yet.</td></tr>'; return; }
+  tbody.innerHTML='';
+  parts.forEach(p=>{
+    const tpCount=Object.keys(p.timepoints||{}).filter(k=>k!=='_end').length;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="checkbox" class="rowSel" data-id="${p.id}"></td>
+      <td>${p.name||''}</td><td>${p.email||''}</td><td>${tpCount}</td>
+      <td>${'★★★★★'.slice(0,p.satisfaction||0)}${'☆☆☆☆☆'.slice(p.satisfaction||0)}</td>
+      <td>${p.dailyUse?'Yes':'No'}</td><td>${p.comments||''}</td>
+      <td><button class="btn ghost" onclick="removeP('${p.id}')">Delete</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('selAll').checked=false;
+}
+function toggleAll(cb){ document.querySelectorAll('.rowSel').forEach(x=>x.checked=cb.checked); }
+function removeP(id){
+  if(!confirm('Delete participant?')) return;
+  let list=JSON.parse(localStorage.getItem(SKEY_PART)||'[]'); list=list.filter(x=>x.id!==id); localStorage.setItem(SKEY_PART, JSON.stringify(list)); listParticipants();
+}
+
+/* participant session */
+let EMAIL=null, currentTP=null, tpImages={}, satisfaction=0, cameraStream=null, lastCapturedDataUrl=null;
+
+function startSession(){
+  const em=(document.getElementById('email').value||'').trim().toLowerCase();
+  if(!em||!em.includes('@')){ document.getElementById('loginMsg').innerText='Enter a valid email.'; return; }
+  EMAIL=em; document.getElementById('loginMsg').innerText='';
+  document.getElementById('consentCard').style.display='block';
+  document.getElementById('captureCard').style.display='block';
+  document.getElementById('endCard').style.display='block';
+  document.getElementById('sig_date').value=new Date().toISOString().slice(0,10);
+  renderStudyForSession(); renderICF();
+}
+function renderStudyForSession(){
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}');
+  const tpList=document.getElementById('timepointList'); tpList.innerHTML='';
+  (s.timepoints||[]).forEach((tp,i)=>{ const b=document.createElement('button'); b.className='tp'; b.textContent=tp; b.onclick=()=>selectTP(tp,b); tpList.appendChild(b); if(i===0) selectTP(tp,b); });
+  document.getElementById('compText').innerText=s.comp||'—';
+  renderSideLinks();
+}
+function renderICF(){
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}');
+  const icf = `
+  <b>Title:</b> ${s.title||'—'} &nbsp; | &nbsp; <b>Sponsor/Client:</b> ${s.client||'—'}<br>
+  <b>Purpose:</b> To evaluate the safety, tolerance, and/or efficacy of the test ${s.product_type||'product'} (${s.product_name||'—'}) under conditions of intended use.<br>
+  <b>Design & Procedures:</b> Controlled application on the ${s.area||'designated area'}, standardized photography, and online questionnaires at predefined timepoints (${(s.timepoints||[]).join(', ')||'—'}).<br>
+  <b>Risks & Discomforts:</b> Possible transient redness, dryness, irritation, itch, comedones, or color changes. Serious adverse events are unlikely and will be documented and reported.<br>
+  <b>Confidentiality:</b> Data are handled in accordance with PIPEDA/LPRPDE, TCPS2, ISO 14155, and ICH E6(R2) Good Clinical Practice. Publications use de-identified data. If U.S. covered entities are involved, HIPAA authorization may apply and can be revoked in writing.<br>
+  <b>Photographic Consent:</b> You authorize capture and secure storage of clinical images for scientific and educational purposes. Images will not be used for advertising without separate written permission.<br>
+  <b>Compensation:</b> ${s.comp||'—'}<br>
+  <b>Voluntary Participation:</b> Your participation is voluntary; you may withdraw at any time without penalty or loss of benefits.<br>
+  <b>Contact:</b> info@labhibalogique.com`;
+  document.getElementById('icfText').innerHTML=icf;
+}
+
+/* Word export (ICF) */
+function downloadConsentWord(){
+  const rec = JSON.parse(localStorage.getItem('consent_'+EMAIL)||'null');
+  const html = `<html><head><meta charset="utf-8"></head><body>
+  <h2>Laboratoire Hibalogique Inc. — H™ | GCP-Aligned</h2>
+  <h3>Informed Consent — Canada</h3>
+  <div>${document.getElementById('icfText').innerHTML}</div>
+  <h4>Participant</h4>
+  <p><b>Name:</b> ${rec?.name||''}<br><b>Age:</b> ${rec?.age||''}<br><b>Gender/Sex:</b> ${rec?.gender||''}<br><b>Fitzpatrick:</b> ${rec?.photo||''}<br><b>Skin type:</b> ${rec?.skin||''}<br><b>Pregnant/Lactating:</b> ${rec?.preg||''}<br><b>Allergies:</b> ${rec?.allergy||''}<br><b>Meds/Topicals:</b> ${rec?.meds||''}<br><b>Date:</b> ${rec?.date||''}</p>
+  </body></html>`;
+  const blob = new Blob([html], {type:'application/msword'}); saveAs(blob, 'Consent_'+(rec?.name||'participant')+'.doc');
+}
+
+/* PDF export (ICF) */
+function downloadConsentPDF(){
+  const { jsPDF } = window.jspdf;
+  const rec = JSON.parse(localStorage.getItem('consent_'+EMAIL)||'null');
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}');
+  const doc=new jsPDF({unit:'pt',format:'a4'}); let y=40;
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text('Laboratoire Hibalogique Inc. — H™ | GCP-Aligned',40,y); y+=18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.text('Informed Consent (electronic signature)',40,y); y+=24;
+  const line=(lbl,val)=>{ doc.setFont('helvetica','bold'); doc.text(lbl,40,y); doc.setFont('helvetica','normal'); doc.text(String(val||'—'), 180, y); y+=16;};
+  line('Title:', s.title); line('Client:', s.client); line('Product:', (s.product_type||'')+' — '+(s.product_name||'')); line('Area:', s.area); line('Timepoints:', (s.timepoints||[]).join(', ')); y+=8;
+  doc.setFont('helvetica','bold'); doc.text('Summary',40,y); y+=12; const lines=doc.splitTextToSize(document.getElementById('icfText').innerText, 520); doc.setFont('helvetica','normal'); doc.text(lines,40,y); y+=lines.length*12+12;
+  doc.setFont('helvetica','bold'); doc.text('Participant',40,y); y+=12; doc.setFont('helvetica','normal');
+  line('Name:', rec?.name); line('Age:', rec?.age); line('Gender/Sex:', rec?.gender); line('Fitzpatrick:', rec?.photo); line('Skin type:', rec?.skin); line('Pregnant/Lactating:', rec?.preg); line('Allergies:', rec?.allergy); line('Meds/Topicals:', rec?.meds);
+  line('Typed name:', rec?.typed); line('Date:', rec?.date);
+  if(rec?.sig){ doc.addImage(rec.sig,'PNG',40,y,220,80); y+=88; }
+  doc.setFontSize(9); doc.text('Laboratoire Hibalogique Inc. — Montréal, QC, Canada • info@labhibalogique.com',40,800);
+  doc.save('Consent_'+(rec?.name||'participant')+'.pdf');
+}
+
+/* signature pad + consent */
+const sigCanvas=document.getElementById('sigCanvas'), sctx=sigCanvas.getContext('2d'); let drawing=false;
+sigCanvas.addEventListener('mousedown', e=>{drawing=true;sctx.moveTo(e.offsetX,e.offsetY);});
+sigCanvas.addEventListener('mousemove', e=>{if(drawing){sctx.lineTo(e.offsetX,e.offsetY);sctx.strokeStyle='#111';sctx.lineWidth=2;sctx.stroke();}});
+window.addEventListener('mouseup', ()=> drawing=false);
+function acceptConsent(){
+  const need=['p_name','p_age','sig_name']; for(const id of need){ if(!(document.getElementById(id).value||'').trim()){ document.getElementById('consentMsg').innerText='Complete all required fields.'; return; } }
+  if(!document.getElementById('attest').checked){ document.getElementById('consentMsg').innerText='Please check the consent attestation.'; return; }
+  const rec={ email:EMAIL, ts:new Date().toISOString(), name:v('p_name'), age:v('p_age'), gender:v('p_gender'), skin:v('p_skin'),
+    photo:v('p_photo'), preg:v('p_preg'), allergy:v('p_allergy'), meds:v('p_meds'), typed:v('sig_name'), date:v('sig_date'), sig:sigCanvas.toDataURL('image/png') };
+  localStorage.setItem('consent_'+EMAIL, JSON.stringify(rec)); upsertAdmin({email:EMAIL, name:rec.name}); document.getElementById('consentMsg').innerText='Consent saved.';
+}
+
+/* camera + overlay */
+async function startCamera(){ try{
+  const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}); cameraStream=stream;
+  const v=document.createElement('video'); v.autoplay=true; v.playsInline=true; v.muted=true; v.srcObject=stream;
+  const wrap=document.getElementById('previewWrap'); wrap.innerHTML=''; wrap.appendChild(v);
+  const circle=document.createElement('div'); circle.className='circle'; const mid=document.createElement('div'); mid.className='midline'; wrap.appendChild(circle); wrap.appendChild(mid);
+}catch(e){ alert('Camera not available: '+e.message); } }
+function stopCamera(){ if(cameraStream){ cameraStream.getTracks().forEach(t=>t.stop()); cameraStream=null; } const wrap=document.getElementById('previewWrap'); wrap.innerHTML='<div id="previewBox">No image selected</div><div class="circle"></div><div class="midline"></div>'; }
+function capturePhoto(){ const v=document.querySelector('#previewWrap video'); if(!v){ alert('Start the camera or upload an image.'); return; } const c=document.createElement('canvas'); c.width=v.videoWidth||720; c.height=v.videoHeight||480; const cx=c.getContext('2d'); cx.drawImage(v,0,0,c.width,c.height); const url=c.toDataURL('image/jpeg',0.92); lastCapturedDataUrl=url; displayCaptured(url); document.getElementById('savePhotoBtn').style.display='inline-block'; }
+function handleFile(e){ const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f); lastCapturedDataUrl=url; displayCaptured(url); document.getElementById('savePhotoBtn').style.display='inline-block'; }
+function displayCaptured(src){
+  const wrap=document.getElementById('previewWrap'); wrap.innerHTML=''; const img=document.createElement('img'); img.src=src; wrap.appendChild(img);
+  const circle=document.createElement('div'); circle.className='circle'; const mid=document.createElement('div'); mid.className='midline'; wrap.appendChild(circle); wrap.appendChild(mid);
+  const metrics=autoAnalyze(src); showMetrics(metrics); localStorage.setItem('last_'+EMAIL, JSON.stringify({ts:new Date().toISOString(),metrics,src}));
+}
+function savePhoto(){ if(!lastCapturedDataUrl){ alert('No photo to save'); return; } addThumb(lastCapturedDataUrl); }
+function addThumb(src){
+  if(!currentTP){ alert('Select a timepoint first.'); return; }
+  tpImages[currentTP]=tpImages[currentTP]||[]; if(tpImages[currentTP].length>=5){ alert('Max 5 images per timepoint.'); return; }
+  tpImages[currentTP].push(src);
+  const el=document.createElement('div'); el.className='thumb';
+  const im=document.createElement('img'); im.src=src;
+  const btnDl=document.createElement('button'); btnDl.className='dl'; btnDl.textContent='↓'; btnDl.onclick=()=>downloadImage(src);
+  const btnX=document.createElement('button'); btnX.className='x'; btnX.textContent='✕'; btnX.onclick=()=>el.remove();
+  el.appendChild(im); el.appendChild(btnDl); el.appendChild(btnX);
+  document.getElementById('tpThumbs').appendChild(el);
+}
+function downloadImage(dataUrl){ const a=document.createElement('a'); a.href=dataUrl; a.download='photo.jpg'; a.click(); }
+async function downloadAllImages(){
+  const zip=new JSZip(), key='tp_'+EMAIL, store=JSON.parse(localStorage.getItem(key)||'{}'); let n=1;
+  Object.entries(store).forEach(([tp,rec])=>{ if(tp==='_end') return; (rec.images||[]).forEach(img=>{ const b64=img.split(',')[1]||''; zip.file(tp.replace(/\s+/g,'_')+'_img'+(n++)+'.jpg', b64, {base64:true}); }); });
+  const blob=await zip.generateAsync({type:'blob'}); saveAs(blob, 'HAI_'+EMAIL+'_images.zip');
+}
+
+/* metrics + derm bands */
+function autoAnalyze(src){
+  const seed=(src.length||111)%97; const pct=(b,v)=>Math.max(0,Math.min(100,Math.round(b+((seed*13)%v)-v/2)));
+  return {wrinkles:pct(30,20), redness:pct(16,16), dryness:pct(24,18), hydration:100-pct(24,18),
+          brightness:pct(18,16), hyperpigmentation:pct(18,16), pores:pct(22,20), comedones:Math.max(0,Math.floor(pct(20,18)))};
+}
+function band(v){ if(v<=20) return ['Minimal','#22c55e']; if(v<=40) return ['Mild','#eab308']; if(v<=60) return ['Moderate','#f97316']; if(v<=80) return ['Marked','#ef4444']; return ['Severe','#b91c1c']; }
+function showMetrics(m){
+  const grid=document.getElementById('metricGrid'); grid.innerHTML='';
+  const items=[['Wrinkles',m.wrinkles,'%'],['Redness',m.redness,'%'],['Dryness',m.dryness,'%'],['Hydration',m.hydration,'%'],['Brightness',m.brightness,'%'],['Hyperpigmentation',m.hyperpigmentation,'%'],['Pores',m.pores,'%'],['Comedones',m.comedones,'count']];
+  items.forEach(([n,val,u])=>{ const d=document.createElement('div'); d.className='metric'; let color='#334155', txt=val+(u==='%'?'%':''); if(u==='%'){ const [lab,c]=band(val); color=c; txt+=' • '+lab; } d.innerHTML=`<span>${n}</span><span class="val" style="color:${color}">${txt}</span>`; grid.appendChild(d); });
+}
+
+/* timepoints */
+function selectTP(name,btn){ document.querySelectorAll('.tp').forEach(n=>n.classList.remove('active')); if(btn) btn.classList.add('active'); currentTP=name; document.getElementById('tpNotes').value=''; document.getElementById('eval_comedones').value=''; document.getElementById('tpThumbs').innerHTML=''; }
+function saveTimepoint(){
+  if(!currentTP){ alert('Select a timepoint'); return; }
+  const notes=(document.getElementById('tpNotes').value||'').trim(); const manual=parseInt((document.getElementById('eval_comedones').value||'NaN'));
+  const last=JSON.parse(localStorage.getItem('last_'+EMAIL)||'null'); const metrics= last?.metrics || autoAnalyze('x'); if(!isNaN(manual)) metrics.comedones=manual;
+  const key='tp_'+EMAIL; const store=JSON.parse(localStorage.getItem(key)||'{}'); store[currentTP]={ ts:new Date().toISOString(), metrics, notes, images: tpImages[currentTP]||[] };
+  localStorage.setItem(key, JSON.stringify(store)); upsertAdmin({email:EMAIL}); alert('Saved.');
+}
+
+/* end of timepoint */
+document.addEventListener('click',(e)=>{ const s=e.target.closest('.star'); if(!s) return; const n=parseInt(s.dataset.v||'0'); satisfaction=n; document.querySelectorAll('#stars .star').forEach(st=>st.classList.toggle('active', parseInt(st.dataset.v)<=n)); });
+function saveEndFeedback(){
+  const key='tp_'+EMAIL; const store=JSON.parse(localStorage.getItem(key)||'{}'); store._end={ satisfaction, dailyUse: document.getElementById('dailyUse').checked, comments:(document.getElementById('finalComments').value||'').trim() };
+  localStorage.setItem(key, JSON.stringify(store)); document.getElementById('endMsg').innerText='Saved.'; upsertAdmin({email:EMAIL});
+}
+
+/* admin upsert */
+function upsertAdmin({email,name}){
+  let list=JSON.parse(localStorage.getItem(SKEY_PART)||'[]'); let obj=list.find(x=>x.email===email);
+  if(!obj){ obj={ id:'p-'+Math.random().toString(36).slice(2,9), email, name:name||'' }; list.push(obj); }
+  const cons=JSON.parse(localStorage.getItem('consent_'+email)||'null'); const tp=JSON.parse(localStorage.getItem('tp_'+email)||'{}');
+  obj.name=name||obj.name||cons?.name||''; obj.timepoints=tp; obj.satisfaction=tp._end?.satisfaction||0; obj.dailyUse=!!tp._end?.dailyUse; obj.comments=tp._end?.comments||'';
+  localStorage.setItem(SKEY_PART, JSON.stringify(list)); if(document.querySelector('.tab.active').dataset.tab==='participants') listParticipants();
+}
+
+/* AI helper */
+function aiReply(){
+  const q=(document.getElementById('aiIn').value||'').toLowerCase(); let a="Maintain consistent lighting and align within the circle at each visit.";
+  if(q.includes('redness')) a="For redness: avoid hot water, fragrance-free moisturizer, consider niacinamide 2–5% if tolerated.";
+  if(q.includes('dry')) a="For dryness: gentle cleanser, moisturize on damp skin, add an occlusive at night; avoid over-exfoliation.";
+  if(q.includes('pore')||q.includes('comedone')) a="For pores/comedones: simple routine; salicylic acid 0.5–2% if tolerated; non-comedogenic makeup.";
+  if(q.includes('hyper')||q.includes('pigment')) a="For hyperpigmentation: daily SPF 30+, consider azelaic acid 10% and vitamin C if tolerated.";
+  document.getElementById('aiOut').innerText=a;
+}
+
+/* analytics + exports */
+function getSelectedParticipants(){ const ids=[...document.querySelectorAll('.rowSel:checked')].map(x=>x.dataset.id); const list=JSON.parse(localStorage.getItem(SKEY_PART)||'[]'); return list.filter(x=>ids.includes(x.id)); }
+function analyzeSelected(){
+  const sel=getSelectedParticipants(); if(!sel.length){ alert('Select participants first.'); return; }
+  const modal=document.createElement('div'); modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+  modal.innerHTML='<div style="background:#fff;width:min(940px,92vw);max-height:90vh;overflow:auto;border-radius:12px;padding:16px"><h3 style="margin:0 0 8px 0">Selected Participants — Analytics</h3><canvas id="lineChart" height="180"></canvas><canvas id="radarChart" height="180" style="margin-top:12px"></canvas><div style="text-align:right;margin-top:8px"><button class="btn ghost" id="closeM">Close</button></div></div>';
+  document.body.appendChild(modal); document.getElementById('closeM').onclick=()=>modal.remove();
+  const {datasets,labels} = buildLineDatasets(sel); const lctx=document.getElementById('lineChart').getContext('2d');
+  new Chart(lctx,{type:'line',data:{labels,datasets},options:{responsive:true,interaction:{mode:'index',intersect:false},scales:{y:{beginAtZero:true,max:100}}}});
+  const {radarLabels,radarData}=buildRadarData(sel); const rctx=document.getElementById('radarChart').getContext('2d');
+  new Chart(rctx,{type:'radar',data:{labels:radarLabels,datasets:radarData},options:{responsive:true,scales:{r:{beginAtZero:true,max:100}}}});
+}
+function buildLineDatasets(sel){
+  const metrics=['wrinkles','redness','dryness','hydration','brightness','hyperpigmentation','pores'];
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}'); const labels=s.timepoints||[];
+  const colors=['#22c55e','#eab308','#f97316','#ef4444','#0ea5e9','#a78bfa','#14b8a6'];
+  const datasets=metrics.map((m,idx)=>{ const data=labels.map(tp=>{ const vals=[]; sel.forEach(p=>{ const v=p.timepoints?.[tp]?.metrics?.[m]; if(typeof v==='number') vals.push(v); }); if(!vals.length) return null; return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length); }); return {label:m[0].toUpperCase()+m.slice(1), data, tension:.3, spanGaps:true, borderColor:colors[idx], backgroundColor:colors[idx]+'33'}; });
+  return {datasets,labels};
+}
+function buildRadarData(sel){
+  const metrics=['wrinkles','redness','dryness','hydration','brightness','hyperpigmentation','pores'];
+  const labels=metrics.map(m=>m[0].toUpperCase()+m.slice(1));
+  const palette=['#ef4444','#f59e0b','#22c55e','#0ea5e9','#a78bfa','#14b8a6','#f97316','#6b7280'];
+  const radarData=sel.map((p,i)=>{ const tps=Object.keys(p.timepoints||{}).filter(k=>k!=='_end'); const last=tps[tps.length-1]; const m=metrics.map(k=>p.timepoints?.[last]?.metrics?.[k]||0); return {label:p.name||p.email,data:m,borderColor:palette[i%palette.length],backgroundColor:palette[i%palette.length]+'22'}; });
+  return {radarLabels:labels,radarData};
+}
+async function exportSelected(){
+  const sel=getSelectedParticipants(); if(!sel.length){ alert('Select participants first.'); return; }
+  // draw charts to canvases to embed in Excel
+  const c1=document.createElement('canvas'); c1.width=1000; c1.height=380; const c2=document.createElement('canvas'); c2.width=600; c2.height=420;
+  const {datasets,labels}=buildLineDatasets(sel); new Chart(c1.getContext('2d'),{type:'line',data:{labels,datasets},options:{responsive:false,animation:false,scales:{y:{beginAtZero:true,max:100}}}});
+  const {radarLabels,radarData}=buildRadarData(sel); new Chart(c2.getContext('2d'),{type:'radar',data:{labels:radarLabels,datasets:radarData},options:{responsive:false,animation:false,scales:{r:{beginAtZero:true,max:100}}}});
+  await new Promise(r=>setTimeout(r,200));
+
+  const wb=new ExcelJS.Workbook(); wb.creator='HAI'; wb.created=new Date();
+  const sh1=wb.addWorksheet('Participants'); sh1.addRow(['Name','Email','Timepoints','Satisfaction (★)','Daily Use','Comments']);
+  sel.forEach(p=>{ const tpCount=Object.keys(p.timepoints||{}).filter(k=>k!=='_end').length; sh1.addRow([p.name||'',p.email||'',tpCount,'★★★★★'.slice(0,p.satisfaction||0),p.dailyUse?'Yes':'No',p.comments||'']); });
+
+  const sh2=wb.addWorksheet('Timepoints'); sh2.addRow(['Email','Timepoint','Wrinkles %','Redness %','Dryness %','Hydration %','Brightness %','Hyperpigmentation %','Pores %','Comedones (count)']);
+  sel.forEach(p=>{ Object.entries(p.timepoints||{}).forEach(([tp,rec])=>{ if(tp==='_end') return; const m=rec.metrics||{}; sh2.addRow([p.email,tp, m.wrinkles??'', m.redness??'', m.dryness??'', m.hydration??'', m.brightness??'', m.hyperpigmentation??'', m.pores??'', m.comedones??'']); }); });
+  const colorCols=[3,4,5,6,7,8,9]; for(let i=2;i<=sh2.rowCount;i++){ colorCols.forEach(ci=>{ const cell=sh2.getRow(i).getCell(ci); const v=parseFloat(cell.value||0); let fill=null; if(v<=20) fill={type:'pattern',pattern:'solid',fgColor:{argb:'E9F9EE'}}; else if(v<=40) fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF9DB'}}; else if(v<=60) fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDD5'}}; else fill={type:'pattern',pattern:'solid',fgColor:{argb:'FEE2E2'}}; cell.fill=fill; }); }
+
+  const charts=wb.addWorksheet('Charts'); charts.addRow(['Line chart — metrics over time (selected participants)']);
+  const img1=wb.addImage({base64: c1.toDataURL('image/png').split(',')[1], extension:'png'}); charts.addImage(img1, {tl:{col:0,row:1}, ext:{width:900,height:320}});
+  charts.addRow([]); charts.addRow(['Radar chart — last visit comparison']);
+  const img2=wb.addImage({base64: c2.toDataURL('image/png').split(',')[1], extension:'png'}); charts.addImage(img2, {tl:{col:0,row:18}, ext:{width:520,height:360}});
+  const buf=await wb.xlsx.writeBuffer(); saveAs(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), 'HAI_Selected_Export.xlsx');
+}
+
+/* init */
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('heroImg').src = HERO[Math.floor(Math.random()*HERO.length)];
+  const s=JSON.parse(localStorage.getItem(SKEY_STUDY)||'{}');
+  ['s_title','s_client','s_internal','s_product_type','s_product_name','s_batch','s_area','s_comp'].forEach(id=>setv(id,s[id.replace('s_','')]));
+  document.getElementById('s_timepoints').value=(s.timepoints||[]).join(', ');
+  renderRes(); renderFiles(); renderSideLinks();
+});
+</script>
+</body>
+</html>
